@@ -9,6 +9,21 @@ def describedf(df,nco=1):
 
 class StringAnalyzer():
     
+    '''
+    class for computing features on a string
+    
+    a word in the provided string is a string entity separated from other entity by one of this separator ".:/-"
+    
+    methods:
+    - is_ip: assess if provided string is a IP adress
+    - nword: return the number of words
+    - extension: return the extension of the site web (com, fr, org ...)
+    - ndot: return the number of dots in the string
+    - bothnumsandwords: assess if each word in the string is made with number and text (ex: 10aer)
+    - synthetise: return a list with the output of the previous methods
+    - list of words: return the list of words in a string
+    '''
+    
     def __init__(self, string):
         self.string = string
         
@@ -69,7 +84,14 @@ class StringAnalyzer():
     
     
 class WebSiteListAnalyser(StringAnalyzer):
+    '''
+    class for computing features on a list of website
+    inherit from StringAnalyzer
     
+    methods:
+    - featuring: computes the features inherited from StringAnalyzer and return a pandas data frame
+    - wordslist: return a pandas data frame with the list of words of each web site provided in the input website list
+    '''
     def __init__(self, weblist):
         self.weblist = weblist
 
