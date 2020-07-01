@@ -21,7 +21,11 @@ class StringAnalyzer():
     - ndot: return the number of dots in the string
     - bothnumsandwords: assess if each word in the string is made with number and text (ex: 10aer)
     - synthetise: return a list with the output of the previous methods
-    - list of words: return the list of words in a string
+    - listofwords: return the list of words in a string
+    
+    attributes:
+    - string
+    - words: created by listofwords() method
     '''
     
     def __init__(self, string):
@@ -68,8 +72,14 @@ class StringAnalyzer():
         if verbose:
             print('contains both nums and words: {}'.format(result))
         
+        return result
+    
+    def remove_www(self, verbose=True):
+        import re
+        if verbose:
+            print('removing www.')
+        result=re.sub(r"www\.","",self.string)
         return result        
-        
         
     def synthetise(self, V=False):
         return [self.is_ip(verbose=V), self.nword(verbose=V), self.extension(verbose=V),self.ndot(verbose=V), self.bothnumsandwords(verbose=V)]
@@ -79,6 +89,8 @@ class StringAnalyzer():
         result=re.split('[.:/-]', self.string)
         if verbose:
             print('list of words is: {}'.format(result))
+            
+        self.words = result
         return result  
     
     
@@ -94,6 +106,10 @@ class WebSiteListAnalyser(StringAnalyzer):
     '''
     def __init__(self, weblist):
         self.weblist = weblist
+        
+    def remove_all_www(self):
+        print('removing www.')
+        self.weblist=[StringAnalyzer(web).remove_www(verbose=False) for web in self.weblist]        
 
     def featuring(self):
         import pandas as pd
