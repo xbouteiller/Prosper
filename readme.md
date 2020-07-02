@@ -12,3 +12,5 @@ python package with 2 class useful for computing features on a provided list of 
 
 - StringAnalyzer
 - WebSiteListAnalyser
+
+See docstring for more details
