@@ -1,16 +1,15 @@
 # Prosper
 
-
-## usefulfunctions
-
-python package with 2 class useful for computing features on a provided list of website and returning a list of words that compose each website address
+Authors: Xavier Bouteiller
+email: xavier.bouteiller@mpdata.fr
 
 
 ## package featuring
 
-2 class
+2 class useful for computing features on a provided list of website and returning a list of words that compose each website address
 
 - StringAnalyzer
 - WebSiteListAnalyser
 
 See docstring for more details
+
