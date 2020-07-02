@@ -130,7 +130,55 @@ class WebSiteListAnalyser(StringAnalyzer):
         columns = ['list_of_words']
         df = pd.DataFrame(temp_df, columns=columns)
         
-        return df
+        return df   
+
     
+class MergeDF(WebSiteListAnalyser, StringAnalyzer):
+    
+    def __init__(self, df1, df2):
+        self.df1=df1
+        self.df2=df2
         
+    def __str__(self):
+        import pandas as pd
+        print("------------------------------------\n")
+        self.describedf(self.df1,nco=self.df1.shape[1])
+        print("------------------------------------\n")
+        self.describedf(self.df2,nco=self.df2.shape[1])
+        print("------------------------------------\n")
+        return ""
+
+    def describedf(self, df,nco):
+        '''
+        Small function useful for describing a dataframe
+        '''
+        import pandas as pd
+        print('shape is nrow:{row} and ncol:{col}'.format(row=df.shape[0],col=df.shape[1]), '\n')
+        print(df.head(), '\n')
+        [print('type of col:{} is:{}'.format(df.columns[nc],df.iloc[:,nc].dtypes), '\n') for nc in range(0,nco)]
+        
+    
+    def mergedf(self, rmw_WWW=False):
+        import pandas as pd 
+        
+        wl1 = WebSiteListAnalyser(weblist=self.df1.url.values)
+        wl2 = WebSiteListAnalyser(weblist=self.df2.url.values)
+        
+        if rmw_WWW:
+            #remove www. from url df1 url columns
+            self.df1['url'] = pd.Series(wl1.remove_all_www())
+            #remove www. from url df2 url columns
+            self.df2['url'] = pd.Series(wl2.remove_all_www())
             
+        df_feat=wl2.featuring()
+        df_concat=pd.concat([self.df2, df_feat], axis=1)
+        self.df_merged = self.df1.merge(df_concat, left_on='url', right_on='url', suffixes=('_left', '_right'))
+        
+        
+        
+        
+        
+        
+        
+        
+        
