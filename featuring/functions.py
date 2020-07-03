@@ -133,11 +133,28 @@ class WebSiteListAnalyser(StringAnalyzer):
         return df   
 
     
-class MergeDF(WebSiteListAnalyser, StringAnalyzer):
+class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
+    '''
+     class for computing features and merging wiki dataframe with snippet data frame
+    
+    df1: data frame containing snippet and bing requests    
+    df2: data frame containing  url and wiki info if available
+   
+    methods:
+    - describedf: print a  description of a data frame
+    - instantiate_df: instantiate the class MergeDF, with the 2 df that wil be concatenated
+    - clean_adress: method for removing www. from address string before computing feature
+    - mergedf: merge the provided data df and compute features on url adress
+    
+    attributes:
+    - df_merged: the merged data frame with the computed features
+    
+    '''
     
     def __init__(self, df1, df2):
-        self.df1=df1
-        self.df2=df2
+        super()
+        self.df1=df1.copy()
+        self.df2=df2.copy()
         
     def __str__(self):
         import pandas as pd
@@ -148,7 +165,7 @@ class MergeDF(WebSiteListAnalyser, StringAnalyzer):
         print("------------------------------------\n")
         return ""
 
-    def describedf(self, df,nco):
+    def describedf(self, df, nco):
         '''
         Small function useful for describing a dataframe
         '''
@@ -157,22 +174,43 @@ class MergeDF(WebSiteListAnalyser, StringAnalyzer):
         print(df.head(), '\n')
         [print('type of col:{} is:{}'.format(df.columns[nc],df.iloc[:,nc].dtypes), '\n') for nc in range(0,nco)]
         
-    
-    def mergedf(self, rmw_WWW=False):
+    def instantiate_df(self):
+        self.wl1 = WebSiteListAnalyser(weblist=self.df1.url.values)
+        self.wl2 = WebSiteListAnalyser(weblist=self.df2.url.values)
+        
+    def clean_adress(self):
+#         self.wl1.remove_all_www()
+        self.wl2.remove_all_www()
+#         self.df1['url']=self.wl1.weblist
+#         self.df2['url']=self.wl2.weblist
+        
+    def mergedf(self):
         import pandas as pd 
         
-        wl1 = WebSiteListAnalyser(weblist=self.df1.url.values)
-        wl2 = WebSiteListAnalyser(weblist=self.df2.url.values)
+        if 'url' not in self.df1.columns or 'url' not in self.df2.columns:
+            raise Exception("df1 and df2 should contain a column named 'url'")
         
-        if rmw_WWW:
-            #remove www. from url df1 url columns
-            self.df1['url'] = pd.Series(wl1.remove_all_www())
-            #remove www. from url df2 url columns
-            self.df2['url'] = pd.Series(wl2.remove_all_www())
-            
-        df_feat=wl2.featuring()
+        df_feat=self.wl2.featuring()
         df_concat=pd.concat([self.df2, df_feat], axis=1)
+        
+        if 'wiki_link' not in self.df2.columns:
+            raise Exception("df2 should contain a column named 'wiki_link'")
+                            
+        df_concat.loc[df_concat.wiki_link.isnull(),'wiki']=0
+        df_concat.loc[~df_concat.wiki_link.isnull(),'wiki']=1
+        df_concat['list_of_words']=self.wl2.wordslist()
         self.df_merged = self.df1.merge(df_concat, left_on='url', right_on='url', suffixes=('_left', '_right'))
+        
+        
+    def nlp_process(self):
+        import spacy
+        
+        nlp  = spacy.load("fr_core_news_md", disable=["tagger", "parser", "ner"])
+        
+        #lower
+        #tokenize
+        #lemmatize
+        
         
         
         
