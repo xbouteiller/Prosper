@@ -201,16 +201,65 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         df_concat['list_of_words']=self.wl2.wordslist()
         self.df_merged = self.df1.merge(df_concat, left_on='url', right_on='url', suffixes=('_left', '_right'))
         
+    
+    
+    def nlp_flow(self, text, nlp_en, nlp_fr, stopwords_en, stopwords_fr):
+        # import spacy
+        # from textblob import TextBlob
+        import re
+        import numpy as np
+
         
-    def nlp_process(self):
+        # b = TextBlob(text)
+        # lang = b.detect_language()
+        # lang='en'
+        text = text.lower()
+        text=re.sub(r"///"," ",text)
+        doc = nlp_en(text)
+        lang = doc._.language['language']
+        print('language is {}'.format(lang))
+        
+        if lang == 'en': 
+            # Generate lemmatized tokens
+            lemmas = [token.lemma_ for token in doc]
+        
+            # Remove stopwords and non-alphabetic tokens
+            a_lemmas = [lemma for lemma in lemmas
+                        if lemma.isalpha() and lemma not in stopwords_en]
+        elif lang =='fr':
+
+            doc = nlp_fr(text)
+        
+            # Generate lemmatized tokens
+            lemmas = [token.lemma_ for token in doc]
+        
+            # Remove stopwords and non-alphabetic tokens
+            a_lemmas = [lemma for lemma in lemmas
+                        if lemma.isalpha() and lemma not in stopwords_fr]
+        else:
+            print('identified language is neither english nor french')
+            a_lemmas = ['ERROR']
+            # lang='UNKNOWN'                
+    
+        # print({'lem_words':' '.join(a_lemmas), 'language':lang})
+
+        return {'lem_words':' '.join(a_lemmas), 'language':lang}
+    
+    def nlp_preprocess(self):        
+        import pandas as pd
         import spacy
+        from spacy_langdetect import LanguageDetector
         
-        nlp  = spacy.load("fr_core_news_md", disable=["tagger", "parser", "ner"])
+        nlp_en=spacy.load("en_core_web_md", disable=["tagger", "ner"])
+        nlp_fr=spacy.load("fr_core_news_md", disable=["tagger", "ner"])
+        nlp_en.add_pipe(LanguageDetector(), name='lang_detect', last=True)
+        nlp_fr.add_pipe(LanguageDetector(), name='lang_detect', last=True)
+        stopwords_en=spacy.lang.en.stop_words.STOP_WORDS
+        stopwords_fr=spacy.lang.fr.stop_words.STOP_WORDS
         
-        #lower
-        #tokenize
-        #lemmatize
         
+        self.preprocessed = self.df_merged.snippet.apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
+
         
         
         

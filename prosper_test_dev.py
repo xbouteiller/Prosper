@@ -14,12 +14,17 @@ import re
 import spacy
 
 #%% import package perso
+
 os.chdir('C:\\Users\\xavier\\Documents\\Prosper')
 from featuring.functions import describedf, StringAnalyzer, WebSiteListAnalyser, MergeDFAndComputeFeature
 
 #%% load df
 dfjson=pd.read_json("data\\bing_results.json")
 df=pd.read_csv("data\\prop_wiki.csv")
+
+#%% shortened df
+# dfjson=dfjson.iloc[3003:3015,:]
+# df=df.iloc[:,:]
 
 #%% merge and compute features
 mdf2=MergeDFAndComputeFeature(df1=dfjson, df2=df)
@@ -28,24 +33,85 @@ print(mdf2)
 # load df1 & df2 within class
 mdf2.instantiate_df()
 
-# remove www. befrore computing features
+# remove www. before computing features
 mdf2.clean_adress()
 
 # merge df & compute feature
 mdf2.mergedf()
 
-print(mdf2.df1.shape)
+
 print(mdf2.df_merged.shape)
-print(mdf2.df_merged.snippet)
+print(mdf2.df_merged.head())
+
+
+#%% preprocess for NLP
+mdf2.nlp_preprocess()
+
+#%%
+print(mdf2.preprocessed)
+
+
+#%%
+print(type(mdf2.preprocessed))
+
+#%%
+
+print(pd.DataFrame(mdf2.preprocessed))
 
 
 #%%
 
-def nlp_flow(text):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#%%
+print(dfjson[['snippet']])
+#%%
+print(type(dfjson[['snippet']]))
+
+a=dfjson['snippet'].map(lambda x: nlp_floww(x))
+#%%
+print(pd.DataFrame(a))
+#%%
+
+def nlp_floww(text):
     import spacy
     from textblob import TextBlob
     import re
-    
+
     b = TextBlob(text)
     lang = b.detect_language()
     
@@ -71,8 +137,8 @@ def nlp_flow(text):
                 if lemma.isalpha() and lemma not in stopwords]
 
     # Print string after text cleaning
-    print(' '.join(a_lemmas))
-    return ' '.join(a_lemmas)
+    print(' '.join(a_lemmas),lang)
+    return ' '.join(a_lemmas), lang
 #%%
 import re
 
@@ -90,4 +156,5 @@ lang = b.detect_language()
 print(lang)
 
 #%%
-nlp_flow(text)
+a=nlp_flow(text)
+print(a)
