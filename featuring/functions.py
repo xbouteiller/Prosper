@@ -258,11 +258,18 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         stopwords_fr=spacy.lang.fr.stop_words.STOP_WORDS
         
         
-        self.preprocessed = self.df_merged.snippet.apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
+        preprocessed = self.df_merged.snippet.apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
+        
+        self.df_merged = pd.concat([self.df_merged, preprocessed], axis=1)
 
         
         
+    # to do add a NLP processing class
+        # tokenizer
+        # tf idf
+        # ngram
         
+        # should allow to select a specific language or to select only the french snippet
         
         
         

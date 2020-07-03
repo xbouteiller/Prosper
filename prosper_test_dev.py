@@ -39,7 +39,7 @@ mdf2.clean_adress()
 # merge df & compute feature
 mdf2.mergedf()
 
-
+#%%
 print(mdf2.df_merged.shape)
 print(mdf2.df_merged.head())
 
@@ -48,19 +48,26 @@ print(mdf2.df_merged.head())
 mdf2.nlp_preprocess()
 
 #%%
-print(mdf2.preprocessed)
+print(mdf2.df_merged.shape)
+print(mdf2.df_merged.head())
+
+#%%
+print(mdf2.df_merged.columns)
 
 
 #%%
-print(mdf2.preprocessed[mdf2.preprocessed['language']=='fr'])
+print(mdf2.df_merged[mdf2.df_merged['language']=='fr'])
 
 #%%
 
-print(mdf2.preprocessed[mdf2.preprocessed['language']=='UNKNOWN'])
+print(mdf2.df_merged[mdf2.df_merged['language']=='UNKNOWN'])
 
 #%%
 print(mdf2.df_merged.iloc[148,:])
 
+#%%
+
+print(mdf2.df_merged.language.value_counts())
 
 
 
