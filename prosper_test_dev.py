@@ -52,21 +52,14 @@ print(mdf2.preprocessed)
 
 
 #%%
-print(type(mdf2.preprocessed))
+print(mdf2.preprocessed[mdf2.preprocessed['language']=='fr'])
 
 #%%
 
-print(pd.DataFrame(mdf2.preprocessed))
-
+print(mdf2.preprocessed[mdf2.preprocessed['language']=='UNKNOWN'])
 
 #%%
-
-
-
-
-
-
-
+print(mdf2.df_merged.iloc[148,:])
 
 
 
