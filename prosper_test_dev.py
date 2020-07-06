@@ -39,7 +39,7 @@ mdf2.clean_adress()
 # merge df & compute feature
 mdf2.mergedf()
 
-#%%
+#%% inspect results
 print(mdf2.df_merged.shape)
 print(mdf2.df_merged.head())
 
@@ -47,59 +47,86 @@ print(mdf2.df_merged.head())
 #%% preprocess for NLP
 mdf2.nlp_preprocess(stop_fr=None, stop_en=None)
 
-#%%
+#%% inspect results
 print(mdf2.df_merged.shape)
 print(mdf2.df_merged.head())
 
-#%%
+#%% inspect results
 print(mdf2.df_merged.columns)
 
 
-#%%
+#%% inspect results
 print(mdf2.df_merged[mdf2.df_merged['language']=='fr'])
-
-#%%
+print(mdf2.df_merged[mdf2.df_merged['language']=='fr'].shape)
+#%% inspect results
 
 print(mdf2.df_merged[mdf2.df_merged['language']=='UNKNOWN'])
 
-#%%
+#%% inspect results
 print(mdf2.df_merged.iloc[148,:])
 
-#%%
+#%% inspect results
 
 print(mdf2.df_merged.language.value_counts())
 
 
-#%%
+#%% process for NLP
 mdf2.nlp_process(lang='fr', min_df=10, ngram_range=(1,2))
 
-
-# %%
+#%% inspect results
 print(mdf2.tfidf_features)
 print(mdf2.tfidf)
 print(mdf2.tfidf.shape)
 
+#%% inspect results
+word100=pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features).sum().sort_values()[-100::]
+
+
+#%%
+assert mdf2.df_merged[mdf2.df_merged['language']=='fr'].shape[0]== mdf2.tfidf.shape[0]
+
+concat_df = pd.concat([ mdf2.df_merged[mdf2.df_merged['language']=='fr'].reset_index(),
+           pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features),
+           pd.DataFrame(np.sum(mdf2.tfidf, axis = 1),columns=['tfidf_mean'])],axis=1)
+
+#%%
+describedf(concat_df)
 #%%
 
 
+#%%
+print(concat_df[['wiki', 'tfidf_mean']].groupby('wiki').mean())
+
+#%%
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features),concat_df['wiki'])
+
+#%%
+from sklearn.ensemble import RandomForestClassifier
+
+rf=RandomForestClassifier(class_weight="balanced_subsample")
+
+rf.fit(X_train, y_train)
+
+#%%
+print(rf.score(X_test, y_test))
+#%%
+from sklearn.metrics import confusion_matrix
+
+print(confusion_matrix(y_test, rf.predict(X_test)))
 
 
+#%%
+print(pd.DataFrame(mdf2.tfidf_features).reset_index())
+print(pd.DataFrame(rf.feature_importances_).reset_index())
+a=pd.DataFrame(mdf2.tfidf_features, columns = ['a']).reset_index()
+b=pd.DataFrame(rf.feature_importances_,  columns = ['c']).reset_index()
 
+#%%
+print(pd.concat([a,b],axis=1).sort_values('c'))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+a=pd.concat([a,b],axis=1).sort_values('c')[-100::]
 
 
 
