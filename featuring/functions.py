@@ -144,7 +144,9 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
     - describedf: print a  description of a data frame
     - instantiate_df: instantiate the class MergeDF, with the 2 df that wil be concatenated
     - clean_adress: method for removing www. from address string before computing feature
-    - mergedf: merge the provided data df and compute features on url adress
+    - mergedf: merge the provided data df and compute features on url adress list
+    - nlp_flow:
+    - nlp_preprocess:
     
     attributes:
     - df_merged: the merged data frame with the computed features
@@ -245,31 +247,127 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
 
         return {'lem_words':' '.join(a_lemmas), 'language':lang}
     
-    def nlp_preprocess(self):        
+    def nlp_preprocess(self,stop_fr=None, stop_en=None):
+    '''
+    apply nlp_flow for cleaning and lemmatizing snippet on snippet feature
+    
+    parameters:
+        - stop_fr & stop_en: allow to add author defined stopwords to the initial spacy stopwords list
+   
+    attributes:
+        - columns 'lem_words' and 'language' added to self.df_merged        
+    '''        
         import pandas as pd
         import spacy
         from spacy_langdetect import LanguageDetector
+        import time
         
         nlp_en=spacy.load("en_core_web_md", disable=["tagger", "ner"])
         nlp_fr=spacy.load("fr_core_news_md", disable=["tagger", "ner"])
         nlp_en.add_pipe(LanguageDetector(), name='lang_detect', last=True)
         nlp_fr.add_pipe(LanguageDetector(), name='lang_detect', last=True)
-        stopwords_en=spacy.lang.en.stop_words.STOP_WORDS
-        stopwords_fr=spacy.lang.fr.stop_words.STOP_WORDS
         
+        if stop_fr:
+            if type(stop_fr)!=list:
+                raise ValueError("stop_fr should be a list of strings")
+
+            stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)+stop_fr
+            print('customized french stopwords list loaded')
+
+        else:
+            stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)
+            print('raw french stopwords list loaded')
+
+        if stop_en:
+            if type(stop_en)!=list:
+                raise ValueError("stop_en should be a list of strings")
+            stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)+stop_en
+            print('customized english stopwords list loaded')
+        else:
+            stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)
+            print('raw english stopwords list loaded')
+        
+        print("--- waiting 3 seconds ---")
+        time.sleep(3)
+        # stopwords_en=spacy.lang.en.stop_words.STOP_WORDS
+        # stopwords_fr=spacy.lang.fr.stop_words.STOP_WORDS
+        # to do: add option for customize stop words
         
         preprocessed = self.df_merged.snippet.apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
         
         self.df_merged = pd.concat([self.df_merged, preprocessed], axis=1)
 
         
+    
+    def nlp_process(self,lang='fr',**kwargs):
+        '''
+        apply tf-idf transformation on lem_words feature
         
-    # to do add a NLP processing class
-        # tokenizer
-        # tf idf
-        # ngram
+        parameters:
+            -lang: 'fr' (default) or 'en'
+            -kwargs:
+                -analyzer
+                -ngram_range
+                -max_df
+                -min_df
+                
+        Attributes:
+            - tfidf
+            - tfidf_features
+        '''     
+       
+        from sklearn.feature_extraction.text import TfidfVectorizer    
         
-        # should allow to select a specific language or to select only the french snippet
+        validM = {'fr':'French', 'en':'English'}
+        if lang not in validM.keys():
+            raise ValueError("lang parameter must be one of {}".format(list(validM.keys())))
+        
+        if 'lem_words' not in self.df_merged.columns:
+            raise ValueError("please pre process the data frame for NLP first - see pre_process() method")
+        
+        # Kwargs
+        Analyser=kwargs.get('analyzer', None)
+        Ngram=kwargs.get('ngram_range ', None)
+        Maxdf=kwargs.get('max_df', None)
+        Mindf=kwargs.get('min_df', None)
+        
+        # if kwargs not provided, set to default values
+        if not Analyser:
+            Analyser='word'
+        else:
+            print('analyser is set to: {}'.format(Analyser))
+        if not Ngram:
+            Ngram=(1,1)
+        else:
+            print('ngram_range is set to: {}'.format(Ngram))
+        if not Maxdf:
+            Maxdf=1.0
+        else:
+            print('max_df is set to: {}'.format(Maxdf))
+        if not Mindf:
+            Mindf=1
+        else:
+            Mindf=int(Mindf)
+            print('min_df is set to: {}'.format(Mindf))
+        
+        # instantiate tf_idf
+        tfidf_vectorizer = TfidfVectorizer(analyzer=Analyser,ngram_range=Ngram,max_df=Maxdf, min_df=Mindf)
+        
+        print('chosen language is {}'.format(validM[lang]))
+        if lang=='fr':
+            df=self.df_merged[self.df_merged['language']=='fr']
+        else:
+            df=self.df_merged[self.df_merged['language']=='en']
+           
+        tfidf=tfidf_vectorizer.fit_transform(df.lem_words.values)
+        
+        self.tfidf = tfidf.A
+        self.tfidf_features = tfidf_vectorizer.get_feature_names()
+        print('tfidf computed, see tfidf & tfidf_features attributes')
+        
+        
+        
+
         
         
         
