@@ -326,7 +326,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         
         # Kwargs
         Analyser=kwargs.get('analyzer', None)
-        Ngram=kwargs.get('ngram_range ', None)
+        Ngram=kwargs.get('ngram_range', None)
         Maxdf=kwargs.get('max_df', None)
         Mindf=kwargs.get('min_df', None)
         

@@ -71,7 +71,7 @@ print(mdf2.df_merged.language.value_counts())
 
 
 #%%
-mdf2.nlp_process(lang='en', min_df=2)
+mdf2.nlp_process(lang='fr', min_df=10, ngram_range=(1,2))
 
 
 # %%
@@ -80,7 +80,7 @@ print(mdf2.tfidf)
 print(mdf2.tfidf.shape)
 
 #%%
-print(list(spacy.lang.fr.stop_words.STOP_WORDS)+[None])
+
 
 
 
