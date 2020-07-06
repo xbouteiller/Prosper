@@ -45,7 +45,7 @@ print(mdf2.df_merged.head())
 
 
 #%% preprocess for NLP
-mdf2.nlp_preprocess()
+mdf2.nlp_preprocess(stop_fr=None, stop_en=None)
 
 #%%
 print(mdf2.df_merged.shape)

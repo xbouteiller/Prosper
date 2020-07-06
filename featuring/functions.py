@@ -248,15 +248,15 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         return {'lem_words':' '.join(a_lemmas), 'language':lang}
     
     def nlp_preprocess(self,stop_fr=None, stop_en=None):
-    '''
-    apply nlp_flow for cleaning and lemmatizing snippet on snippet feature
-    
-    parameters:
-        - stop_fr & stop_en: allow to add author defined stopwords to the initial spacy stopwords list
-   
-    attributes:
-        - columns 'lem_words' and 'language' added to self.df_merged        
-    '''        
+        '''
+        apply nlp_flow for cleaning and lemmatizing snippet on snippet feature
+        
+        parameters:
+            - stop_fr & stop_en: allow to add author defined stopwords to the initial spacy stopwords list
+       
+        attributes:
+            - columns 'lem_words' and 'language' added to self.df_merged        
+        '''        
         import pandas as pd
         import spacy
         from spacy_langdetect import LanguageDetector
@@ -273,7 +273,6 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
 
             stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)+stop_fr
             print('customized french stopwords list loaded')
-
         else:
             stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)
             print('raw french stopwords list loaded')
