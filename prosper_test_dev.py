@@ -100,21 +100,23 @@ ml.fit_classif()
 #%%
 count_notattributed=[]
 
-for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']:
-    try:
-        ml.do_clustering(eps=0.2, min_samples=5, metric=met)
-        unique, counts = np.unique(ml.dfy_db, return_counts=True)
-        count_notattributed.append(dict(zip(unique, counts))[-1])
-    except:
-        print(met)
-        pass
+for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+   for eps in [0.01,0.05,0.1, 0.25,0.5,1]:
+        try:
+            ml.do_clustering(eps=eps, min_samples=5, metric=met)
+            unique, counts = np.unique(ml.dfy_db, return_counts=True)
+            count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
+        except:
+            print(met)
+            pass
     
 print(count_notattributed)
 #%%
+ml.do_clustering(eps=0.2, min_samples=5, metric='sokalmichener')
+unique, counts = np.unique(ml.dfy_db, return_counts=True)
+print(dict(zip(unique, counts)))
 
-
-
-
+#%%
 
 
 

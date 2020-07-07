@@ -24,6 +24,11 @@ class MachineLearning():
         self.dfy=dfy
         
     def split_data(self, random_state=99, test_size=0.5, stratify=None):
+        '''
+        split dfX & dfy to training and testing set
+        '''
+
+      
         from sklearn.model_selection import train_test_split
         
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.dfX,
@@ -36,7 +41,17 @@ class MachineLearning():
         # return self.X_train, self.X_test, self.y_train, self.y_test
         
     def instantiate_classif(self, classifier='lr', **kwargs):        
+        '''
+        Instantiate a scikit classifier among:
+            - random forest
+            - naive bayes
+            - logistic regression
+            
+        main hyperparameters are customizable via **kwargs arguments
         
+        try to predict if the website has a wiki page
+        
+        '''
         from sklearn.naive_bayes import GaussianNB
         from sklearn.linear_model import LogisticRegression
         from sklearn.ensemble import RandomForestClassifier
@@ -97,6 +112,9 @@ class MachineLearning():
         # return self.classif
             
     def fit_classif(self):
+        '''
+        fit the instantiated classifier then return score and confusion matrix
+        '''        
         from sklearn.metrics import confusion_matrix
         try:            
             self.classif.fit(self.X_train, self.y_train.values.ravel())
@@ -109,8 +127,11 @@ class MachineLearning():
         print('Confusion matrix is \n',self.confusion_matrix)
         
     def do_clustering(self, eps=0.2, min_samples=5, metric='euclidean'):
+        '''
+        fit a dbscan clustering then return prediction
+        '''
         from sklearn.cluster import DBSCAN        
-        db=DBSCAN(eps=eps, min_samples=min_samples, metric=metric )
+        db=DBSCAN(eps=eps, min_samples=min_samples, metric=metric, n_jobs=-2 )
         self.dfy_db = db.fit_predict(self.dfX)
         print('\n ------ dbscan clustering done ------\n')
 
