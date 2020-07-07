@@ -22,10 +22,6 @@ from featuring.functions import describedf, StringAnalyzer, WebSiteListAnalyser,
 dfjson=pd.read_json("data\\bing_results.json")
 df=pd.read_csv("data\\prop_wiki.csv")
 
-#%% shortened df
-# dfjson=dfjson.iloc[3003:3015,:]
-# df=df.iloc[:,:]
-
 #%% merge and compute features
 mdf2=MergeDFAndComputeFeature(df1=dfjson, df2=df)
 print(mdf2)
@@ -50,19 +46,15 @@ mdf2.nlp_preprocess(stop_fr=None, stop_en=None)
 #%% inspect results
 print(mdf2.df_merged.shape)
 print(mdf2.df_merged.head())
-
-#%% inspect results
 print(mdf2.df_merged.columns)
 
 
 #%% inspect results
 print(mdf2.df_merged[mdf2.df_merged['language']=='fr'])
 print(mdf2.df_merged[mdf2.df_merged['language']=='fr'].shape)
-#%% inspect results
 
+#%% inspect results
 print(mdf2.df_merged[mdf2.df_merged['language']=='UNKNOWN'])
-
-#%% inspect results
 print(mdf2.df_merged.iloc[148,:])
 
 #%% inspect results
@@ -71,31 +63,84 @@ print(mdf2.df_merged.language.value_counts())
 
 
 #%% process for NLP
-mdf2.nlp_process(lang='fr', min_df=10, max_df=200, ngram_range=(1,3))
+mdf2.nlp_process(lang='fr', min_df=100, max_df=2000, ngram_range=(1,1))
 
 #%% inspect results
 # print(mdf2.tfidf_features)
 print(mdf2.tfidf)
 print(mdf2.tfidf.shape)
-
-#%% inspect results
 word100=pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features).sum().sort_values()[-100::]
-print(word100)
+print(word100)     
+           
+      
+#%% prepare data set
+mdf2.preparedataset()
 
 #%%
-assert mdf2.df_merged[mdf2.df_merged['language']=='fr'].shape[0]== mdf2.tfidf.shape[0]
+from featuring.machinelearning import MachineLearning
 
-concat_df = pd.concat([ mdf2.df_merged[mdf2.df_merged['language']=='fr'].reset_index(),
-           pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features),
-           pd.DataFrame(np.mean(mdf2.tfidf, axis = 1),columns=['tfidf_mean'])],axis=1)
+ml = MachineLearning(dfX=mdf2.dfX, dfy=mdf2.dfy)
+
+ml.split_data(random_state=99, 
+              test_size=0.5, 
+              stratify=None)
+
+ml.instantiate_classif(classifier='rf',
+                       max_depth=15,
+                       class_weight=None,
+                       n_estimators=500,
+                       penalty=None,
+                       C=None,
+                       solver=None
+                       )
+ml.fit_classif()
+
+
 
 #%%
-describedf(concat_df)
-#%%
-print(concat_df['wiki'].value_counts())
+count_notattributed=[]
 
+for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']:
+    try:
+        ml.do_clustering(eps=0.2, min_samples=5, metric=met)
+        unique, counts = np.unique(ml.dfy_db, return_counts=True)
+        count_notattributed.append(dict(zip(unique, counts))[-1])
+    except:
+        print(met)
+        pass
+    
+print(count_notattributed)
 #%%
-print(concat_df[['wiki', 'tfidf_mean']].groupby('wiki').mean())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print(ml.X_train.bothnumsandwords)
+
+
+
+
 
 #%%
 from sklearn.model_selection import train_test_split
@@ -109,8 +154,9 @@ X_train, X_test, y_train, y_test = train_test_split(pd.DataFrame(mdf2.tfidf,
 #%%
 from sklearn.naive_bayes import GaussianNB
 model = GaussianNB()
-model.fit(X_train, y_train)
-
+model.fit(ml.X_train, ml.y_train.values.ravel())
+#%%
+print(ml.y_train)
 #%%
 print(model.score(X_test, y_test))
 #%%

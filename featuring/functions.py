@@ -67,7 +67,10 @@ class StringAnalyzer():
         import re
         result=re.split(r"[.:/-]", self.string)
         regexp = re.compile(r'\D+\d+|\d+\D+')
-        result=any([regexp.search(res) for res in result]) 
+        if any([regexp.search(res) for res in result]):
+            result=1
+        else:
+            result=0            
    
         if verbose:
             print('contains both nums and words: {}'.format(result))
@@ -120,6 +123,7 @@ class WebSiteListAnalyser(StringAnalyzer):
         df = pd.DataFrame(temp_df, columns=columns)
         df['nword']=pd.to_numeric(df['nword'].values, downcast='integer')
         df['ndot']=pd.to_numeric(df['ndot'].values, downcast='integer')
+        df['bothnumsandwords']=pd.to_numeric(df['bothnumsandwords'].values, downcast='integer')
         return df
      
     def wordslist(self):
@@ -360,11 +364,32 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
            
         tfidf=tfidf_vectorizer.fit_transform(df.lem_words.values)
         
+        self.lang=lang
         self.tfidf = tfidf.A
         self.tfidf_features = tfidf_vectorizer.get_feature_names()
         print('tfidf computed, see tfidf & tfidf_features attributes')
         
+    def preparedataset(self):
+        import pandas as pd
+        import numpy as np
         
+        if self.df_merged.empty:              
+            raise ValueError('df_merged is missing, please use .mergedf() method first')
+        
+        try:
+            np.any(self.tfidf)
+        except:                          
+            raise ValueError('tfidf is missing, please use .tfidf() method first')
+            
+                
+        self.dfX = pd.concat([self.df_merged.loc[self.df_merged['language']==self.lang,
+                                    ['ndot','bothnumsandwords']].reset_index(drop=True),
+                 pd.DataFrame(self.tfidf,columns=self.tfidf_features)],axis=1)
+                 
+        self.dfy = self.df_merged.loc[self.df_merged['language']==self.lang,['wiki']].reset_index(drop=True)    
+        print('\n ------ data set ready ------\n')
+
+                   
         
 
         
