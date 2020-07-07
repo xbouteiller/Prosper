@@ -71,28 +71,28 @@ print(mdf2.df_merged.language.value_counts())
 
 
 #%% process for NLP
-mdf2.nlp_process(lang='fr', min_df=10, ngram_range=(1,2))
+mdf2.nlp_process(lang='fr', min_df=10, max_df=200, ngram_range=(1,3))
 
 #%% inspect results
-print(mdf2.tfidf_features)
+# print(mdf2.tfidf_features)
 print(mdf2.tfidf)
 print(mdf2.tfidf.shape)
 
 #%% inspect results
 word100=pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features).sum().sort_values()[-100::]
-
+print(word100)
 
 #%%
 assert mdf2.df_merged[mdf2.df_merged['language']=='fr'].shape[0]== mdf2.tfidf.shape[0]
 
 concat_df = pd.concat([ mdf2.df_merged[mdf2.df_merged['language']=='fr'].reset_index(),
            pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features),
-           pd.DataFrame(np.sum(mdf2.tfidf, axis = 1),columns=['tfidf_mean'])],axis=1)
+           pd.DataFrame(np.mean(mdf2.tfidf, axis = 1),columns=['tfidf_mean'])],axis=1)
 
 #%%
 describedf(concat_df)
 #%%
-
+print(concat_df['wiki'].value_counts())
 
 #%%
 print(concat_df[['wiki', 'tfidf_mean']].groupby('wiki').mean())
@@ -100,21 +100,22 @@ print(concat_df[['wiki', 'tfidf_mean']].groupby('wiki').mean())
 #%%
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features),concat_df['wiki'])
+X_train, X_test, y_train, y_test = train_test_split(pd.DataFrame(mdf2.tfidf,
+                                                                 columns=mdf2.tfidf_features),
+                                                    concat_df['wiki'],
+                                                    random_state=99,
+                                                    test_size=0.5)
 
 #%%
-from sklearn.ensemble import RandomForestClassifier
-
-rf=RandomForestClassifier(class_weight="balanced_subsample")
-
-rf.fit(X_train, y_train)
+from sklearn.naive_bayes import GaussianNB
+model = GaussianNB()
+model.fit(X_train, y_train)
 
 #%%
-print(rf.score(X_test, y_test))
+print(model.score(X_test, y_test))
 #%%
 from sklearn.metrics import confusion_matrix
-
-print(confusion_matrix(y_test, rf.predict(X_test)))
+print(confusion_matrix(y_test, model.predict(X_test)))
 
 
 #%%
