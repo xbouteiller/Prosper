@@ -126,7 +126,7 @@ class MachineLearning():
         self.confusion_matrix = confusion_matrix( self.y_test.values.ravel(), self.classif.predict(self.X_test))
         print('Confusion matrix is \n',self.confusion_matrix)
         
-    def do_clustering(self, eps=0.2, min_samples=5, metric='euclidean'):
+    def do_dbscan(self, eps=0.2, min_samples=5, metric='euclidean'):
         '''
         fit a dbscan clustering then return prediction
         '''
@@ -135,5 +135,63 @@ class MachineLearning():
         self.dfy_db = db.fit_predict(self.dfX)
         print('\n ------ dbscan clustering done ------\n')
 
-    
-                                        
+
+    def do_pham(self, max_k = 10):
+        '''
+        https://github.com/Vonatzki/pham_dimov_python/blob/master/Pham-Dimov%20Python%20Implementation.ipynb
+        '''
+        # Pertinent modules for this proof
+        from sklearn.cluster import KMeans        
+        import pandas as pd
+        from pandas import DataFrame
+
+        rng = range(1, max_k + 1)
+        
+        sks = pd.Series(index = rng)
+        As = pd.Series(index = rng)
+        fks = pd.Series(index = rng)
+        
+        nd = self.dfX.shape[1]
+        
+        print("Number of dimensions detected: %s\n" % nd)
+        
+        pham_output = DataFrame()
+        
+        for k in rng:
+            model = KMeans(n_clusters = k)
+            model = model.fit(self.dfX)
+            
+            # Compute for the Sk
+            sk = model.inertia_
+            sks[k] = sk
+            
+            # Compute for the alpha
+            if (k == 2) & (nd > 1):
+                a = 1 - (3 / (4 * float(nd)))
+            elif (k > 2) & (nd > 1):
+                a = As[k-1] + ((1-As[k-1])/6)
+            else:
+                a = None
+                
+            As[k] = a
+            
+            # Compute f(k)
+            if k == 1:
+                fk = 1.0
+            elif (sks[k-1] != 0):
+                fk = sk / (a * sks[k-1])
+            elif (sks[k-1] == 0):
+                fk = 1.0
+            fks[k] = fk
+            
+            print("CENTROID %s || sk: %s\tfk: %s\ta: %s" % (k, sk, fk, a))
+            
+            output = DataFrame({"K":[k],"Sk":[sk], "F(k)":[fk], "ALPHA":[a]})
+            
+            pham_output = pd.concat([pham_output, output], axis = 0)
+            
+            
+        self.dfy_pham = model.predict(self.dfX)
+            
+            
+                                            

@@ -61,7 +61,7 @@ print(mdf2.df_merged.iloc[148,:])
 print(mdf2.df_merged.language.value_counts())
 
 #%% process for NLP
-mdf2.nlp_process(lang='fr', min_df=100, max_df=2000, ngram_range=(1,1))
+mdf2.nlp_process(lang='fr', min_df=50, max_df=500, ngram_range=(1,2))
 
 #%% inspect results
 # print(mdf2.tfidf_features)
@@ -95,25 +95,34 @@ ml.fit_classif()
 
 
 #%% clustering
-count_notattributed=[]
 
-for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-   for eps in [0.01,0.05,0.1, 0.25,0.5,1]:
-        try:
-            ml.do_clustering(eps=eps, min_samples=5, metric=met)
-            unique, counts = np.unique(ml.dfy_db, return_counts=True)
-            count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
-        except:
-            print(met)
-            pass
+if False:
+    count_notattributed=[]
     
-print(count_notattributed)
+    for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+       for eps in [0.01,0.05,0.1,0.25,0.5,1]:
+            try:
+                ml.do_dbscan(eps=eps, min_samples=5, metric=met)
+                unique, counts = np.unique(ml.dfy_db, return_counts=True)
+                count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
+            except:
+                print(met)
+                pass
+        
+    print(count_notattributed)
 #%%
-ml.do_clustering(eps=0.5, min_samples=5, metric='chebyshev')
+ml.do_dbscan(eps=0.5, min_samples=5, metric='chebyshev')
 unique, counts = np.unique(ml.dfy_db, return_counts=True)
 print(dict(zip(unique, counts)))
 
 #%%
+
+
+
+#%%
+
+
+
 
 
 
