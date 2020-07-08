@@ -133,9 +133,6 @@ class MachineLearning():
         
     def do_pca(self, n_components=None):
         '''
-        STILL IN DEVELOPMENT
-        
-        when do I need to apply the pca transform ?
         '''
         from sklearn.decomposition import PCA
         
@@ -150,9 +147,75 @@ class MachineLearning():
             self.dfX=pca.fit_transform(self.dfX)
 
         self.pca=True         
+    
+    def find_dbscan(self, metrics=None, eps=None, min_samples=5):
+        '''
+        '''
+        import numpy as np
+        import pandas as pd
+
+        if type(metrics)!=list:
+            raise ValueError("metrics should be a list of strings")
+                             
+        if type(eps)!=list:
+            raise ValueError("eps should be a list of strings")
+            
+        listofmetrics=['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']
+        
+        for metr in metrics:
+            if metr not in listofmetrics:
+                raise ValueError("{} not in allowed metrics \nmetrics should be made of one or more among {}".format(metr, listofmetrics))
+            
+        if not metrics:
+            metrics=listofmetrics
+        if not eps:
+            eps=[0.5]
             
 
+            
+        count_notattributed=[]
         
+        print('\n-----------------------------------------------')
+        print('metrics tested will be: \n', metrics)
+        print('-----------------------------------------------')
+        print('eps tested will be: \n', eps)
+        print('-----------------------------------------------')
+        
+        
+        for met in metrics:
+            for eps in [0.1,0.25,0.5,1]:
+                try:
+                    self.do_dbscan(eps=eps, min_samples=5, metric=met)
+                    unique, counts = np.unique(self.dfy_db, return_counts=True)
+                    count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
+                except:
+                    print(met)
+                    pass
+            
+        print(count_notattributed)  
+        score_dbscan=pd.DataFrame({'metric':[],
+                           'eps':[],
+                           'nerror':[],
+                           'nc1':[]})
+   
+        for c in count_notattributed:
+            # print(list(c.items())[0][0], list(c.items())[0][1][0], list(c.items())[0][1][1],  list(c.items())[0][1][2] )
+            score_dbscan=score_dbscan.append(pd.DataFrame({'metric':[list(c.items())[0][0]],
+                                                           'eps':[list(c.items())[0][1][0]],
+                                                           'nerror': [list(c.items())[0][1][1]],
+                                                           'nc1': [list(c.items())[0][1][2]]}))
+           
+    
+        score_dbscan['sum_error_C1']=score_dbscan[['nerror', 'nc1']].sum(axis=1)
+        score_dbscan['Percentage_error_C1']=score_dbscan['sum_error_C1']/self.dfX.shape[0]
+        print(score_dbscan.sort_values(['Percentage_Err_Grp1','nerror', 'nc1'], ascending=[True,False, True]).drop(['nerror', 'nc1', 'sum_error_C1'],axis=1))
+        print('\n--------------------------------------------------') 
+        print('\nPercentage_Err_Grp1 represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering')      
+    
+        
+        score_dbscan.set_index(score_dbscan["metric"]+score_dbscan["eps"].astype(str))[['Percentage_Err_Grp1']].plot.bar(rot=90)
+    
+    
     def do_dbscan(self, eps=0.2, min_samples=5, metric='euclidean'):
         '''
         fit a dbscan clustering then return prediction

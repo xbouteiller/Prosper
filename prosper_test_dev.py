@@ -92,10 +92,13 @@ ml.instantiate_classif(classifier='lr',
                        )
 ml.fit_classif()
 
+#%%
 
 
 #%% clustering
+ml.find_dbscan(metrics=['euclidean', 'canberra'], eps=[0.2,0.5], min_samples=5)
 
+#%%
 if True:
     count_notattributed=[]
     
@@ -110,6 +113,30 @@ if True:
                 pass
         
     print(count_notattributed)
+    
+#%%
+score_dbscan=pd.DataFrame({'metric':[],
+                           'eps':[],
+                           'nerror':[],
+                           'nc1':[]})
+   
+for c in count_notattributed:
+    # print(list(c.items())[0][0], list(c.items())[0][1][0], list(c.items())[0][1][1],  list(c.items())[0][1][2] )
+    score_dbscan=score_dbscan.append(pd.DataFrame({'metric':[list(c.items())[0][0]],
+                                                   'eps':[list(c.items())[0][1][0]],
+                                                   'nerror': [list(c.items())[0][1][1]],
+                                                   'nc1': [list(c.items())[0][1][2]]}))
+    
+score_dbscan['sum_error_C1']=score_dbscan[['nerror', 'nc1']].sum(axis=1)
+score_dbscan['Percentage_Err_Grp1']=score_dbscan['sum_error_C1']/ml.dfX.shape[0]
+print(score_dbscan.sort_values(['Percentage_Err_Grp1','nerror', 'nc1'], ascending=[True,False, True]).drop(['nerror', 'nc1', 'sum_error_C1'],axis=1))
+print('\n--------------------------------------------------') 
+print('\nPercentage represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering')
+
+
+
+score_dbscan.set_index(score_dbscan["metric"]+score_dbscan["eps"].astype(str))[['Percentage_Err_Grp1']].plot.bar(rot=90)
+
 #%%
 ml.do_dbscan(eps=0.5, min_samples=5, metric='chebyshev')
 unique, counts = np.unique(ml.dfy_db, return_counts=True)
