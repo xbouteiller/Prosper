@@ -189,10 +189,10 @@ class MachineLearning():
                     unique, counts = np.unique(self.dfy_db, return_counts=True)
                     count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
                 except:
-                    print(met)
+                    print('Clustering Error with \n -metric: {} and \n -eps: {}'.format(met, eps))
                     pass
             
-        print(count_notattributed)  
+      
         score_dbscan=pd.DataFrame({'metric':[],
                            'eps':[],
                            'nerror':[],
@@ -207,7 +207,8 @@ class MachineLearning():
            
     
         score_dbscan['sum_error_C1']=score_dbscan[['nerror', 'nc1']].sum(axis=1)
-        score_dbscan['Percentage_error_C1']=score_dbscan['sum_error_C1']/self.dfX.shape[0]
+        score_dbscan['Percentage_Err_Grp1']=score_dbscan['sum_error_C1']/self.dfX.shape[0]
+        print('\n')
         print(score_dbscan.sort_values(['Percentage_Err_Grp1','nerror', 'nc1'], ascending=[True,False, True]).drop(['nerror', 'nc1', 'sum_error_C1'],axis=1))
         print('\n--------------------------------------------------') 
         print('\nPercentage_Err_Grp1 represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering')      
