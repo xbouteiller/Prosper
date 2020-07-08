@@ -183,13 +183,13 @@ class MachineLearning():
         
         
         for met in metrics:
-            for eps in [0.1,0.25,0.5,1]:
+            for ep in eps:
                 try:
-                    self.do_dbscan(eps=eps, min_samples=5, metric=met)
+                    self.do_dbscan(eps=ep, min_samples=5, metric=met)
                     unique, counts = np.unique(self.dfy_db, return_counts=True)
-                    count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
+                    count_notattributed.append({met:[ep, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
                 except:
-                    print('Clustering Error with \n -metric: {} and \n -eps: {}'.format(met, eps))
+                    print('Clustering Error with \n -metric: {} and \n -eps: {}'.format(met, ep))
                     pass
             
       

@@ -96,7 +96,7 @@ ml.fit_classif()
 
 
 #%% clustering
-ml.find_dbscan(metrics=['euclidean', 'canberra'], eps=[4,8], min_samples=5)
+ml.find_dbscan(metrics=['euclidean', 'jaccard'], eps=[2,8], min_samples=5)
 
 #%%
 if True:
