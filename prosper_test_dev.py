@@ -71,23 +71,23 @@ word100=pd.DataFrame(mdf2.tfidf,columns=mdf2.tfidf_features).sum().sort_values()
 print(word100)               
       
 #%% prepare data set
-mdf2.preparedataset()
+mdf2.preparedataset(add_user_feature=False)
 
 #%% split train evaluate classifier
 from featuring.machinelearning import MachineLearning
-
+#%% ML
 ml = MachineLearning(dfX=mdf2.dfX, dfy=mdf2.dfy)
 
 ml.split_data(random_state=99, 
               test_size=0.5, 
               stratify=None)
 
-ml.instantiate_classif(classifier='rf',
+ml.instantiate_classif(classifier='lr',
                        max_depth=15,
                        class_weight=None,
                        n_estimators=500,
                        penalty=None,
-                       C=None,
+                       C=3,
                        solver=None
                        )
 ml.fit_classif()
@@ -96,11 +96,11 @@ ml.fit_classif()
 
 #%% clustering
 
-if False:
+if True:
     count_notattributed=[]
     
-    for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-       for eps in [0.01,0.05,0.1,0.25,0.5,1]:
+    for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+       for eps in [0.1,0.25,0.5,1]:
             try:
                 ml.do_dbscan(eps=eps, min_samples=5, metric=met)
                 unique, counts = np.unique(ml.dfy_db, return_counts=True)
@@ -114,24 +114,122 @@ if False:
 ml.do_dbscan(eps=0.5, min_samples=5, metric='chebyshev')
 unique, counts = np.unique(ml.dfy_db, return_counts=True)
 print(dict(zip(unique, counts)))
+cluster_dbscan=pd.DataFrame(ml.dfy_db)
+#%%
+print(pd.crosstab(ml.dfy_db, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
+#%%
+
+if False:
+    ml.find_kmeans(max_k = 10)
+
+#%%
+ml.do_kmeans(nK=2)
+cluster_kmeans=pd.DataFrame(ml.dfy_kmeans)
+#%%
+print('\n------row: kmeans, col: wiki------')
+print(pd.crosstab(ml.dfy_kmeans, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
+
+#%%
+print('\n------row: dbscan, col: kmeans------')
+print(pd.crosstab(ml.dfy_db, ml.dfy_kmeans))
+
+#%% ML with kmeans clusters 
+
+
+ml = MachineLearning(dfX=mdf2.dfX, dfy=cluster_kmeans)
+
+ml.split_data(random_state=99, 
+              test_size=0.5, 
+              stratify=None)
+
+ml.instantiate_classif(classifier='lr',
+                       max_depth=4,
+                       class_weight=None,
+                       n_estimators=500,
+                       penalty=None,
+                       C=None,
+                       solver=None
+                       )
+ml.fit_classif()
+
+print('\npca done? ', ml.pca)
 
 #%%
 
+coef_lr=pd.DataFrame.from_dict({'name':mdf2.dfX.columns,'coef':(ml.classif.coef_[0].ravel())})
 
-
+print(coef_lr.sort_values('coef', ascending = False)[0:30])
+print(coef_lr.sort_values('coef', ascending = False)[-30::])
 #%%
+coef_lr.sort_values('coef', ascending = False)['coef'].plot.bar()
+plt.show()
+#%% ML with PCA
+
+
+ml = MachineLearning(dfX=mdf2.dfX, dfy=mdf2.dfy)
+
+ml.split_data(random_state=99, 
+              test_size=0.5, 
+              stratify=None)
+
+ml.do_pca()
+
+ml.instantiate_classif(classifier='lr',
+                       max_depth=15,
+                       class_weight=None,
+                       n_estimators=500,
+                       penalty='l2',
+                       C=17,
+                       solver=None
+                       )
+ml.fit_classif()
+
+print('\npca done? ', ml.pca)
 
 
 
 
+#%% clustering with PCA
+
+ml = MachineLearning(dfX=mdf2.dfX, dfy=mdf2.dfy)
+ml.do_pca()
 
 
+if True:
+    count_notattributed=[]
+    
+    for met in  ['chebyshev', 'jaccard','euclidean']:
+       for eps in [0.5,1,2]:
+            try:
+                ml.do_dbscan(eps=eps, min_samples=5, metric=met)
+                unique, counts = np.unique(ml.dfy_db, return_counts=True)
+                count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
+            except:
+                print(met)
+                pass
+        
+    print(count_notattributed)
 
 
+if True:
+    ml.find_kmeans(max_k = 10)
 
 
+ml.do_kmeans(nK=2)
 
+ml.do_dbscan(eps=0.5, min_samples=5, metric='chebyshev')
+unique, counts = np.unique(ml.dfy_db, return_counts=True)
+print(dict(zip(unique, counts)))
 
+print('\n------row: dbscan, col: wiki------')
+print(pd.crosstab(ml.dfy_db, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
+print('\n')
 
+print('\n------row: kmeans, col: wiki------')
+print(pd.crosstab(ml.dfy_kmeans, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
+print('\n')
 
+print('\n------row: dbscan, col: kmeans------')
+print(pd.crosstab(ml.dfy_db, ml.dfy_kmeans))
+print('\n')
 

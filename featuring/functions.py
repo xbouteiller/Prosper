@@ -369,7 +369,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         self.tfidf_features = tfidf_vectorizer.get_feature_names()
         print('tfidf computed, see tfidf & tfidf_features attributes')
         
-    def preparedataset(self):
+    def preparedataset(self, add_user_feature=True):
         import pandas as pd
         import numpy as np
         
@@ -381,10 +381,18 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         except:                          
             raise ValueError('tfidf is missing, please use .tfidf() method first')
             
-                
-        self.dfX = pd.concat([self.df_merged.loc[self.df_merged['language']==self.lang,
-                                    ['ndot','bothnumsandwords']].reset_index(drop=True),
-                 pd.DataFrame(self.tfidf,columns=self.tfidf_features)],axis=1)
+        if add_user_feature:      
+            self.dfX = pd.concat([self.df_merged.loc[self.df_merged['language']==self.lang,
+                                        ['ndot','bothnumsandwords']].reset_index(drop=True),
+                     pd.DataFrame(self.tfidf,columns=self.tfidf_features)],axis=1)
+            print('\ndata set prepared including features: \n -ndot \n -bothnumsandwords ')
+            print('\nShape is: \n -nrow: {} \n -ncol: {}'.format(self.dfX.shape[0], self.dfX.shape[1]))
+
+        else:
+            self.dfX=pd.DataFrame(self.tfidf,columns=self.tfidf_features)
+            print('\ndata set prepared with only: \n -tfidf features')
+            print('\nShape is: \n -nrow: {} \n -ncol: {}'.format(self.dfX.shape[0], self.dfX.shape[1]))
+
                  
         self.dfy = self.df_merged.loc[self.df_merged['language']==self.lang,['wiki']].reset_index(drop=True)    
         print('\n ------ data set ready ------\n')

@@ -22,6 +22,8 @@ class MachineLearning():
             raise ValueError("dfX should contain only numeric columns")       
         self.dfX=dfX       
         self.dfy=dfy
+        self.splitted=False
+        self.pca=False
         
     def split_data(self, random_state=99, test_size=0.5, stratify=None):
         '''
@@ -36,8 +38,11 @@ class MachineLearning():
                                                                                 random_state=random_state,
                                                                                 test_size=test_size)
         if stratify:
-            print('\n data were splitted with parameters: \n -test_size: {} \n -stratify: {}'.format(test_size, stratify.columns))
-        
+            print('\ndata were splitted with parameters: \n -test_size: {} \n -stratify: {}'.format(test_size, stratify.columns))
+        else:
+            print('\ndata were splitted with parameters: \n -test_size: {}'.format(test_size))
+
+        self.splitted = True
         # return self.X_train, self.X_test, self.y_train, self.y_test
         
     def instantiate_classif(self, classifier='lr', **kwargs):        
@@ -126,6 +131,28 @@ class MachineLearning():
         self.confusion_matrix = confusion_matrix( self.y_test.values.ravel(), self.classif.predict(self.X_test))
         print('Confusion matrix is \n',self.confusion_matrix)
         
+    def do_pca(self, n_components=None):
+        '''
+        STILL IN DEVELOPMENT
+        
+        when do I need to apply the pca transform ?
+        '''
+        from sklearn.decomposition import PCA
+        
+        if self.splitted:
+            print('\ndataset was already splitted, applying pca on X_train & X_test')
+            pca = PCA(n_components=n_components)
+            self.X_train=pca.fit_transform(self.X_train)
+            self.X_test=pca.transform(self.X_test)
+        else:
+            print('\ndataset was NOT splitted, applying pca on dfX')
+            pca = PCA(n_components=n_components)
+            self.dfX=pca.fit_transform(self.dfX)
+
+        self.pca=True         
+            
+
+        
     def do_dbscan(self, eps=0.2, min_samples=5, metric='euclidean'):
         '''
         fit a dbscan clustering then return prediction
@@ -136,7 +163,7 @@ class MachineLearning():
         print('\n ------ dbscan clustering done ------\n')
 
 
-    def do_pham(self, max_k = 10):
+    def find_kmeans(self, max_k = 10):
         '''
         https://github.com/Vonatzki/pham_dimov_python/blob/master/Pham-Dimov%20Python%20Implementation.ipynb
         '''
@@ -144,7 +171,8 @@ class MachineLearning():
         from sklearn.cluster import KMeans        
         import pandas as pd
         from pandas import DataFrame
-
+        import matplotlib.pyplot as plt
+        
         rng = range(1, max_k + 1)
         
         sks = pd.Series(index = rng)
@@ -190,8 +218,19 @@ class MachineLearning():
             
             pham_output = pd.concat([pham_output, output], axis = 0)
             
+        # Show the plot of F(x) output of Pham et al metric
+        plt.plot(pham_output["K"], pham_output["F(k)"])
+        plt.xticks(range(2, len(pham_output["F(k)"])+1))
+        plt.title("f(K) Results")
+        plt.xlabel("k")
+        plt.ylabel("f(K)")
+        plt.show()
             
-        self.dfy_pham = model.predict(self.dfX)
+    def do_kmeans(self, nK):
+        from sklearn.cluster import KMeans
+        model = KMeans(n_clusters = nK)
+        model = model.fit(self.dfX)            
+        self.dfy_kmeans = model.predict(self.dfX)
             
             
                                             
