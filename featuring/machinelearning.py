@@ -153,6 +153,14 @@ class MachineLearning():
         '''
         import numpy as np
         import pandas as pd
+        
+        
+
+        listofmetrics=['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']
+        if not metrics:
+            metrics=listofmetrics
+        if not eps:
+            eps=[0.5]     
 
         if type(metrics)!=list:
             raise ValueError("metrics should be a list of strings")
@@ -160,8 +168,6 @@ class MachineLearning():
         if type(eps)!=list:
             raise ValueError("eps should be a list of strings")
             
-        listofmetrics=['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']
-        
         for metr in metrics:
             if metr not in listofmetrics:
                 raise ValueError("{} not in allowed metrics \nmetrics should be made of one or more among {}".format(metr, listofmetrics))
@@ -169,8 +175,7 @@ class MachineLearning():
         if not metrics:
             metrics=listofmetrics
         if not eps:
-            eps=[0.5]
-            
+            eps=[0.5] 
 
             
         count_notattributed=[]
