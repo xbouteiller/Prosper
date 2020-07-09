@@ -256,7 +256,7 @@ class MachineLearning():
         pham_output = DataFrame()
         
         for k in rng:
-            model = KMeans(n_clusters = k)
+            model = KMeans(n_clusters = k, random_state=99)
             model = model.fit(self.dfX)
             
             # Compute for the Sk
@@ -298,7 +298,7 @@ class MachineLearning():
             
     def do_kmeans(self, nK):
         from sklearn.cluster import KMeans
-        model = KMeans(n_clusters = nK)
+        model = KMeans(n_clusters = nK, random_state=99)
         model = model.fit(self.dfX)            
         self.dfy_kmeans = model.predict(self.dfX)
             
