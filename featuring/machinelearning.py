@@ -153,7 +153,8 @@ class MachineLearning():
         '''
         import numpy as np
         import pandas as pd
-        
+        import matplotlib.pyplot as plt
+
         
 
         listofmetrics=['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']
@@ -216,11 +217,11 @@ class MachineLearning():
         print('\n')
         print(score_dbscan.sort_values(['Percentage_Err_Grp1','nerror', 'nc1'], ascending=[True,False, True]).drop(['nerror', 'nc1', 'sum_error_C1'],axis=1))
         print('\n--------------------------------------------------') 
-        print('\nPercentage_Err_Grp1 represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering')      
+        print('\nPercentage_Err_Grp1 represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering\n')      
     
         
-        score_dbscan.set_index(score_dbscan["metric"]+score_dbscan["eps"].astype(str))[['Percentage_Err_Grp1']].plot.bar(rot=90)
-    
+        score_dbscan.set_index(score_dbscan["metric"]+score_dbscan["eps"].astype(str))[['Percentage_Err_Grp1']].plot.bar(rot=90, legend=False)
+        plt.show()
     
     def do_dbscan(self, eps=0.2, min_samples=5, metric='euclidean'):
         '''

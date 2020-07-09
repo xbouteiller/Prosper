@@ -92,73 +92,37 @@ ml.instantiate_classif(classifier='lr',
                        )
 ml.fit_classif()
 
-#%%
-
 
 #%% clustering
-ml.find_dbscan(metrics=['euclidean', 'jaccard'], min_samples=5)
+ml = MachineLearning(dfX=mdf2.dfX, dfy=mdf2.dfy)
 
-#%%
 if True:
-    count_notattributed=[]
-    
-    for met in  ['braycurtis', 'canberra', 'chebyshev', 'dice','euclidean', 'jaccard', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-       for eps in [0.1,0.25,0.5,1]:
-            try:
-                ml.do_dbscan(eps=eps, min_samples=5, metric=met)
-                unique, counts = np.unique(ml.dfy_db, return_counts=True)
-                count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
-            except:
-                print(met)
-                pass
-        
-    print(count_notattributed)
-    
-#%%
-score_dbscan=pd.DataFrame({'metric':[],
-                           'eps':[],
-                           'nerror':[],
-                           'nc1':[]})
-   
-for c in count_notattributed:
-    # print(list(c.items())[0][0], list(c.items())[0][1][0], list(c.items())[0][1][1],  list(c.items())[0][1][2] )
-    score_dbscan=score_dbscan.append(pd.DataFrame({'metric':[list(c.items())[0][0]],
-                                                   'eps':[list(c.items())[0][1][0]],
-                                                   'nerror': [list(c.items())[0][1][1]],
-                                                   'nc1': [list(c.items())[0][1][2]]}))
-    
-score_dbscan['sum_error_C1']=score_dbscan[['nerror', 'nc1']].sum(axis=1)
-score_dbscan['Percentage_Err_Grp1']=score_dbscan['sum_error_C1']/ml.dfX.shape[0]
-print(score_dbscan.sort_values(['Percentage_Err_Grp1','nerror', 'nc1'], ascending=[True,False, True]).drop(['nerror', 'nc1', 'sum_error_C1'],axis=1))
-print('\n--------------------------------------------------') 
-print('\nPercentage represents the proportion of rows assignated either to Error group or to only One cluster by dbscan \nHigh ratio indicates non consistent clustering')
+  ml.find_dbscan(metrics=['jaccard','sqeuclidean', 'chebyshev'], eps=[0.01,0.1,1,10], min_samples=4)
+
+if False:
+    ml.find_kmeans(max_k = 20)
 
 
+ml.do_kmeans(nK=2)
 
-score_dbscan.set_index(score_dbscan["metric"]+score_dbscan["eps"].astype(str))[['Percentage_Err_Grp1']].plot.bar(rot=90)
-
-#%%
 ml.do_dbscan(eps=0.5, min_samples=5, metric='chebyshev')
 unique, counts = np.unique(ml.dfy_db, return_counts=True)
 print(dict(zip(unique, counts)))
-cluster_dbscan=pd.DataFrame(ml.dfy_db)
-#%%
+
+print('\n------row: dbscan, col: wiki------')
 print(pd.crosstab(ml.dfy_db, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
-#%%
+print('\n')
 
-if False:
-    ml.find_kmeans(max_k = 10)
-
-#%%
-ml.do_kmeans(nK=2)
-cluster_kmeans=pd.DataFrame(ml.dfy_kmeans)
-#%%
 print('\n------row: kmeans, col: wiki------')
 print(pd.crosstab(ml.dfy_kmeans, mdf2.df_merged.loc[ mdf2.df_merged['language']=='fr', ['wiki']].values.ravel()))
+print('\n')
 
-#%%
 print('\n------row: dbscan, col: kmeans------')
 print(pd.crosstab(ml.dfy_db, ml.dfy_kmeans))
+print('\n')
+
+cluster_kmeans=pd.DataFrame(ml.dfy_kmeans)
+cluster_dbscan=pd.DataFrame(ml.dfy_db)
 
 #%% ML with kmeans clusters 
 
@@ -187,9 +151,22 @@ coef_lr=pd.DataFrame.from_dict({'name':mdf2.dfX.columns,'coef':(ml.classif.coef_
 
 print(coef_lr.sort_values('coef', ascending = False)[0:30])
 print(coef_lr.sort_values('coef', ascending = False)[-30::])
-#%%
+
 coef_lr.sort_values('coef', ascending = False)['coef'].plot.bar()
 plt.show()
+
+
+#%%
+
+plt.scatter(mdf2.dfX['assurance'], mdf2.dfX['puissance'])
+plt.show()
+
+#%%
+plt.scatter(mdf2.dfX['marque'], mdf2.dfX['modèle'])
+plt.show()
+
+
+
 #%% ML with PCA
 
 
@@ -205,14 +182,13 @@ ml.instantiate_classif(classifier='lr',
                        max_depth=15,
                        class_weight=None,
                        n_estimators=500,
-                       penalty='l2',
+                       penalty=None,
                        C=17,
                        solver=None
                        )
 ml.fit_classif()
 
 print('\npca done? ', ml.pca)
-
 
 
 
@@ -223,20 +199,7 @@ ml.do_pca()
 
 
 if True:
-    count_notattributed=[]
-    
-    for met in  ['chebyshev', 'jaccard','euclidean']:
-       for eps in [0.5,1,2]:
-            try:
-                ml.do_dbscan(eps=eps, min_samples=5, metric=met)
-                unique, counts = np.unique(ml.dfy_db, return_counts=True)
-                count_notattributed.append({met:[eps, dict(zip(unique, counts))[-1],dict(zip(unique, counts))[0]]})
-            except:
-                print(met)
-                pass
-        
-    print(count_notattributed)
-
+  ml.find_dbscan(metrics=['braycurtis','sqeuclidean', 'chebyshev'], eps=[0.01,0.2,0.7], min_samples=4)
 
 if True:
     ml.find_kmeans(max_k = 10)
