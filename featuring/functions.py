@@ -422,7 +422,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         print(lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
         return lsamodel
     
-    def compute_coherence_values(self, dictionary, doc_term_matrix, doc_clean, stop, start=2, step=3):
+    def compute_coherence_values(self, dictionary, doc_term_matrix, stop, lang, start=2, step=3):
         """
         Input   : dictionary : Gensim dictionary
                   corpus : Gensim corpus
@@ -436,23 +436,39 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         from gensim.models import LsiModel
         from gensim.models.coherencemodel import CoherenceModel
    
+        validM = {'fr':'French', 'en':'English'}
+        if lang not in validM.keys():
+            raise ValueError("lang parameter must be one of {}".format(list(validM.keys())))
+        
+        if 'lem_words' not in self.df_merged.columns:
+            raise ValueError("please pre process the data frame for NLP first - see pre_process() method")
+        
+        print('chosen language is {}'.format(validM[lang]))
+        if lang=='fr':
+            df=self.df_merged[self.df_merged['language']=='fr']
+        else:
+            df=self.df_merged[self.df_merged['language']=='en']
+    
+    
         coherence_values = []
         model_list = []
         for num_topics in range(start, stop, step):
             # generate LSA model
             model = LsiModel(doc_term_matrix, num_topics=num_topics, id2word = dictionary)  # train model
             model_list.append(model)
-            coherencemodel = CoherenceModel(model=model, texts=doc_clean, dictionary=dictionary, coherence='c_v')
+            coherencemodel = CoherenceModel(model=model, texts=df.lem_words.values, dictionary=dictionary, coherence='c_v')
             coherence_values.append(coherencemodel.get_coherence())
         return model_list, coherence_values    
     
     
-    def plot_graph(self, doc_clean,start, stop, step):
+    def plot_graph(self, start, stop, step, lang='fr'):
    
         import matplotlib.pyplot as plt
         
-        dictionary,doc_term_matrix=self.prepare_corpus(doc_clean)
-        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,doc_clean,
+
+        
+        dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
+        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,
                                                                 stop, start, step)
         # Show graph
         x = range(start, stop, step)
