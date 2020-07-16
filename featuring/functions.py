@@ -438,7 +438,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         Output  : model_list : List of LSA topic models
                   coherence_values : Coherence values corresponding to the LDA model with respective number of topics
         """
-        print(lang)
+        # print(lang)
         from gensim.models import LsiModel
         from gensim.models.coherencemodel import CoherenceModel
        
@@ -462,6 +462,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         model_list = []    
         
         for num_topics in range(start, stop, step):
+            print('\nnumber of topics is: {}'.format(num_topics))
             # generate LSA model
             model = LsiModel(doc_term_matrix, num_topics=num_topics, id2word = dictionary)  # train model
             model_list.append(model)
