@@ -398,10 +398,13 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
             df=self.df_merged[self.df_merged['language']=='fr']
         else:
             df=self.df_merged[self.df_merged['language']=='en']
-           
+        
+        doc_clean=[]
+        [doc_clean.append(i.split()) for i in df.lem_words.values]
+        
         
         # Creating the term dictionary of our courpus, where every unique term is assigned an index. dictionary = corpora.Dictionary(doc_clean)
-        dictionary = corpora.Dictionary(df.lem_words.values)
+        dictionary = corpora.Dictionary(doc_clean)
         # Converting list of documents (corpus) into Document Term Matrix using dictionary prepared above.
         doc_term_matrix = [dictionary.doc2bow(doc) for doc in df.lem_words.values]
         # generate LDA model
@@ -452,11 +455,14 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
     
         coherence_values = []
         model_list = []
+        doc_clean=[]
+        [doc_clean.append(i.split()) for i in df.lem_words.values]
+        
         for num_topics in range(start, stop, step):
             # generate LSA model
             model = LsiModel(doc_term_matrix, num_topics=num_topics, id2word = dictionary)  # train model
             model_list.append(model)
-            coherencemodel = CoherenceModel(model=model, texts=df.lem_words.values, dictionary=dictionary, coherence='c_v')
+            coherencemodel = CoherenceModel(model=model, texts=doc_clean, dictionary=dictionary, coherence='c_v')
             coherence_values.append(coherencemodel.get_coherence())
         return model_list, coherence_values    
     

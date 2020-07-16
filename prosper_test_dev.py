@@ -223,3 +223,6 @@ print('\n------row: dbscan, col: kmeans------')
 print(pd.crosstab(ml.dfy_db, ml.dfy_kmeans))
 print('\n')
 
+#%%  lda
+
+mdf2.plot_graph(start=2,stop=5,step=1)
