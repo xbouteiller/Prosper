@@ -22,6 +22,9 @@ from featuring.functions import describedf, StringAnalyzer, WebSiteListAnalyser,
 dfjson=pd.read_json("data\\bing_results.json")
 df=pd.read_csv("data\\prop_wiki.csv")
 
+
+dfjson=dfjson.iloc[0:100,:]
+df=df.iloc[0:100,:]
 #%% merge and compute features
 mdf2=MergeDFAndComputeFeature(df1=dfjson, df2=df)
 print(mdf2)

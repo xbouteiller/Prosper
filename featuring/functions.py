@@ -406,7 +406,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         # Creating the term dictionary of our courpus, where every unique term is assigned an index. dictionary = corpora.Dictionary(doc_clean)
         dictionary = corpora.Dictionary(doc_clean)
         # Converting list of documents (corpus) into Document Term Matrix using dictionary prepared above.
-        doc_term_matrix = [dictionary.doc2bow(doc) for doc in df.lem_words.values]
+        doc_term_matrix = [dictionary.doc2bow(doc) for doc in doc_clean]
         # generate LDA model
         
         return dictionary,doc_term_matrix
@@ -474,7 +474,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
 
         
         dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
-        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,
+        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,lang=lang,
                                                                 stop, start, step)
         # Show graph
         x = range(start, stop, step)
