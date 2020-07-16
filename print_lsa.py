@@ -39,11 +39,11 @@ if __name__ == '__main__':
 	# preprocess for NLP
 	mdf2.nlp_preprocess(stop_fr=None, stop_en=None)
 
-	#%%
-	mdf2.create_gensim_lsa_model(number_of_topics=5, words=10,lang='fr')
+	#%% create a specific model
+	mdf2.create_gensim_lsa_model(number_of_topics=10, words=10,lang='fr')
 
-	#%%
-	mdf2.plot_graph(start=2,stop=15,step=1)
+	#%% find optimal number of topics
+	mdf2.plot_graph(start=2,stop=30,step=1)
 
 	#
-	mdf2.create_gensim_lsa_model(number_of_topics=2, words=20, lang='fr')
+	# mdf2.create_gensim_lsa_model(number_of_topics=2, words=20, lang='fr')
