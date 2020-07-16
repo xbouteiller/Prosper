@@ -411,7 +411,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         
         return dictionary,doc_term_matrix
     
-    def create_gensim_lsa_model(self, doc_clean,number_of_topics,words,lang='fr'):
+    def create_gensim_lsa_model(self, number_of_topics,words,lang='fr'):
         """
         Input  : clean document, number of topics and number of words associated with each topic
         Purpose: create LSA model using gensim
@@ -419,7 +419,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         """
         from gensim.models import LsiModel
 
-        dictionary,doc_term_matrix=self.prepare_corpus(doc_clean, lang=lang)
+        dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
         # generate LSA model
         lsamodel = LsiModel(doc_term_matrix, num_topics=number_of_topics, id2word = dictionary)  # train model
         print(lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
