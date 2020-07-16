@@ -289,9 +289,9 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         else:
             stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)
             print('raw english stopwords list loaded')
-        
-        print("--- waiting 3 seconds ---")
-        time.sleep(3)
+        ti=1
+        print("\n--- waiting {} seconds ---".format(ti))
+        time.sleep(ti)
         # stopwords_en=spacy.lang.en.stop_words.STOP_WORDS
         # stopwords_fr=spacy.lang.fr.stop_words.STOP_WORDS
         # to do: add option for customize stop words
@@ -422,10 +422,13 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
         # generate LSA model
         lsamodel = LsiModel(doc_term_matrix, num_topics=number_of_topics, id2word = dictionary)  # train model
-        print(lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
+        print('\n',lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
+        
+        self.lsamodel=lsamodel
+        
         return lsamodel
     
-    def compute_coherence_values(self, dictionary, doc_term_matrix, stop, lang, start=2, step=3):
+    def compute_coherence_values(self, dictionary, doc_term_matrix, lang, stop, start=2, step=3):
         """
         Input   : dictionary : Gensim dictionary
                   corpus : Gensim corpus
@@ -435,10 +438,10 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         Output  : model_list : List of LSA topic models
                   coherence_values : Coherence values corresponding to the LDA model with respective number of topics
         """
-
+        print(lang)
         from gensim.models import LsiModel
         from gensim.models.coherencemodel import CoherenceModel
-   
+       
         validM = {'fr':'French', 'en':'English'}
         if lang not in validM.keys():
             raise ValueError("lang parameter must be one of {}".format(list(validM.keys())))
@@ -451,12 +454,12 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
             df=self.df_merged[self.df_merged['language']=='fr']
         else:
             df=self.df_merged[self.df_merged['language']=='en']
-    
-    
-        coherence_values = []
-        model_list = []
+            
         doc_clean=[]
         [doc_clean.append(i.split()) for i in df.lem_words.values]
+        
+        coherence_values = []
+        model_list = []    
         
         for num_topics in range(start, stop, step):
             # generate LSA model
@@ -466,17 +469,16 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
             coherence_values.append(coherencemodel.get_coherence())
         return model_list, coherence_values    
     
-    
+
     def plot_graph(self, start, stop, step, lang='fr'):
    
-        import matplotlib.pyplot as plt
-        
-
-        
-        dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
-        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,lang=lang,
+        import matplotlib.pyplot as plt        
+  
+       
+    
+        dictionary, doc_term_matrix=self.prepare_corpus(lang=lang)
+        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix, lang,
                                                                 stop, start, step)
-        # Show graph
         x = range(start, stop, step)
         plt.plot(x, coherence_values)
         plt.xlabel("Number of Topics")
