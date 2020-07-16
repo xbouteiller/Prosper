@@ -369,6 +369,101 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         self.tfidf_features = tfidf_vectorizer.get_feature_names()
         print('tfidf computed, see tfidf & tfidf_features attributes')
         
+        
+    def prepare_corpus(self,lang='fr'):
+        """
+        Input  : clean document
+        Purpose: create term dictionary of our courpus and Converting list of documents (corpus) into Document Term Matrix
+        Output : term dictionary and Document Term Matrix
+        https://www.datacamp.com/community/tutorials/discovering-hidden-topics-python
+        """
+        # import os.path
+        from gensim import corpora
+        # from gensim.models import LsiModel
+        # from nltk.tokenize import RegexpTokenizer
+        # from nltk.corpus import stopwords
+        # from nltk.stem.porter import PorterStemmer
+        # from gensim.models.coherencemodel import CoherenceModel
+        # import matplotlib.pyplot as plt
+        
+        validM = {'fr':'French', 'en':'English'}
+        if lang not in validM.keys():
+            raise ValueError("lang parameter must be one of {}".format(list(validM.keys())))
+        
+        if 'lem_words' not in self.df_merged.columns:
+            raise ValueError("please pre process the data frame for NLP first - see pre_process() method")
+        
+        print('chosen language is {}'.format(validM[lang]))
+        if lang=='fr':
+            df=self.df_merged[self.df_merged['language']=='fr']
+        else:
+            df=self.df_merged[self.df_merged['language']=='en']
+           
+        
+        # Creating the term dictionary of our courpus, where every unique term is assigned an index. dictionary = corpora.Dictionary(doc_clean)
+        dictionary = corpora.Dictionary(df.lem_words.values)
+        # Converting list of documents (corpus) into Document Term Matrix using dictionary prepared above.
+        doc_term_matrix = [dictionary.doc2bow(doc) for doc in df.lem_words.values]
+        # generate LDA model
+        
+        return dictionary,doc_term_matrix
+    
+    def create_gensim_lsa_model(self, doc_clean,number_of_topics,words,lang='fr'):
+        """
+        Input  : clean document, number of topics and number of words associated with each topic
+        Purpose: create LSA model using gensim
+        Output : return LSA model
+        """
+        from gensim.models import LsiModel
+
+        dictionary,doc_term_matrix=self.prepare_corpus(doc_clean, lang=lang)
+        # generate LSA model
+        lsamodel = LsiModel(doc_term_matrix, num_topics=number_of_topics, id2word = dictionary)  # train model
+        print(lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
+        return lsamodel
+    
+    def compute_coherence_values(self, dictionary, doc_term_matrix, doc_clean, stop, start=2, step=3):
+        """
+        Input   : dictionary : Gensim dictionary
+                  corpus : Gensim corpus
+                  texts : List of input texts
+                  stop : Max num of topics
+        purpose : Compute c_v coherence for various number of topics
+        Output  : model_list : List of LSA topic models
+                  coherence_values : Coherence values corresponding to the LDA model with respective number of topics
+        """
+
+        from gensim.models import LsiModel
+        from gensim.models.coherencemodel import CoherenceModel
+   
+        coherence_values = []
+        model_list = []
+        for num_topics in range(start, stop, step):
+            # generate LSA model
+            model = LsiModel(doc_term_matrix, num_topics=num_topics, id2word = dictionary)  # train model
+            model_list.append(model)
+            coherencemodel = CoherenceModel(model=model, texts=doc_clean, dictionary=dictionary, coherence='c_v')
+            coherence_values.append(coherencemodel.get_coherence())
+        return model_list, coherence_values    
+    
+    
+    def plot_graph(self, doc_clean,start, stop, step):
+   
+        import matplotlib.pyplot as plt
+        
+        dictionary,doc_term_matrix=self.prepare_corpus(doc_clean)
+        model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix,doc_clean,
+                                                                stop, start, step)
+        # Show graph
+        x = range(start, stop, step)
+        plt.plot(x, coherence_values)
+        plt.xlabel("Number of Topics")
+        plt.ylabel("Coherence score")
+        plt.legend(("coherence_values"), loc='best')
+        plt.show()
+        
+    
+            
     def preparedataset(self, add_user_feature=True):
         import pandas as pd
         import numpy as np
