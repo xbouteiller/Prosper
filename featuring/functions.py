@@ -428,7 +428,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         
         return lsamodel
     
-    def compute_coherence_values(self, dictionary, doc_term_matrix, lang, stop, start=2, step=3):
+    def compute_coherence_values(self, dictionary, doc_term_matrix, lang, start=2, stop=10,step=1):
         """
         Input   : dictionary : Gensim dictionary
                   corpus : Gensim corpus
@@ -478,7 +478,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
     
         dictionary, doc_term_matrix=self.prepare_corpus(lang=lang)
         model_list, coherence_values = self.compute_coherence_values(dictionary, doc_term_matrix, lang,
-                                                                stop, start, step)
+                                                                     start, stop, step)
         x = range(start, stop, step)
         plt.plot(x, coherence_values)
         plt.xlabel("Number of Topics")

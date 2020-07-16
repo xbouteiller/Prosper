@@ -257,4 +257,4 @@ mdf2.nlp_preprocess(stop_fr=None, stop_en=None)
 mdf2.create_gensim_lsa_model(number_of_topics=5, words=10,lang='fr')
 #%%
 
-mdf2.plot_graph(start=2,stop=5,step=1)
+mdf2.plot_graph(start=2,stop=10,step=1)
