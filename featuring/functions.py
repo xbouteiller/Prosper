@@ -409,6 +409,10 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         doc_term_matrix = [dictionary.doc2bow(doc) for doc in doc_clean]
         # generate LDA model
         
+        self.doc_clean=doc_clean
+        self.dictionary=dictionary
+        self.doc_term_matrix=doc_term_matrix
+        
         return dictionary,doc_term_matrix
     
     def create_gensim_lsa_model(self, number_of_topics,words,lang='fr'):
@@ -425,7 +429,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         print('\n',lsamodel.print_topics(num_topics=number_of_topics, num_words=words))
         
         self.lsamodel=lsamodel
-        
+        self.number_of_topics_lsa=number_of_topics
         return lsamodel
     
     def compute_coherence_values(self, dictionary, doc_term_matrix, lang, start=2, stop=10,step=1):
@@ -471,8 +475,132 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         return model_list, coherence_values    
     
 
+    def extract_words_by_lsa_topic(self, num_words=10):
+        '''
+        print top words associated with each topic for lsa
+        '''
+        import numpy as np
+        from gensim.models import LsiModel
+        
+        words_array_lsa=[]
+        
+        for i,j in self.lsamodel.show_topics(num_topics=self.number_of_topics_lsa, num_words=10, formatted=False):
+            for k in range(0,num_words):
+                words_array_lsa.append(j[k][0])
+        
+        words_array_lsa=np.array(words_array_lsa).reshape(self.number_of_topics_lsa,-1)
+        self.words_array_lsa=words_array_lsa
+        print(words_array_lsa)
+
+
+
+    def create_gensim_lda_model(self, number_of_topics,words,lang='fr'):
+        """
+        Input  : clean document, number of topics and number of words associated with each topic
+        Purpose: create LDA model using gensim
+        Output : return LDA model
+        """
+        from gensim.models import LdaModel, LdaMulticore
+
+        dictionary,doc_term_matrix=self.prepare_corpus(lang=lang)
+        # generate LDA model
+        ldamodel = LdaModel(doc_term_matrix, num_topics=number_of_topics, id2word = dictionary)  # train model
+        print('\n',ldamodel.print_topics(num_topics=number_of_topics, num_words=words))
+        
+        self.ldamodel=ldamodel
+        self.number_of_topics_lda=number_of_topics
+        return ldamodel
+    
+    
+    def extract_words_by_lda_topic(self, num_words=10):
+        '''
+        print top words associated with each topic for lda
+        '''
+        import numpy as np
+
+        
+        words_array_lda=[]
+        
+        for i,j in self.ldamodel.show_topics(num_topics=self.number_of_topics_lda, num_words=10, formatted=False):
+            for k in range(0,num_words):
+                words_array_lda.append(j[k][0])
+        
+        words_array_lda=np.array(words_array_lda).reshape(self.number_of_topics_lda,-1)
+        self.words_array_lda=words_array_lda
+        print(words_array_lda)
+
+    
+    def lda_predicted_cluster(self, texts=None):
+        '''
+        predict cluster of corpus based on LDA model
+        return pandas data frame with 2 columns
+        - cluster (most likely)
+        - proba
+        
+        https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb
+        
+        bug fixed: use itemgetter to find the max proba
+        '''
+        from operator import itemgetter
+        import pandas as pd
+        
+        if not texts:
+            all_topics = self.ldamodel.get_document_topics(self.doc_term_matrix, per_word_topics=True)
+               
+        else:
+            texts=self.nlp_preprocess_new_texts(texts)
+            doc_term_matrix = [self.dictionary.doc2bow(doc) for doc in texts]
+            all_topics = self.ldamodel.get_document_topics(doc_term_matrix, per_word_topics=True)
+
+        lda_cluster=[]    
+        [lda_cluster.append([max(doc_topics,key=itemgetter(1))[0],max(doc_topics,key=itemgetter(1))[1]]) for doc_topics, _, _ in all_topics]
+
+        lda_cluster=pd.DataFrame(lda_cluster, columns=['cluster','proba'])
+        
+        self.lda_cluster=lda_cluster
+
+
+
+    def nlp_preprocess_new_texts(self, texts,stop_fr=None, stop_en=None):
+        import pandas as pd
+        import spacy
+        from spacy_langdetect import LanguageDetector
+        import time
+        
+        nlp_en=spacy.load("en_core_web_md", disable=["tagger", "ner"])
+        nlp_fr=spacy.load("fr_core_news_md", disable=["tagger", "ner"])
+        nlp_en.add_pipe(LanguageDetector(), name='lang_detect', last=True)
+        nlp_fr.add_pipe(LanguageDetector(), name='lang_detect', last=True)
+        
+        if stop_fr:
+            if type(stop_fr)!=list:
+                raise ValueError("stop_fr should be a list of strings")
+
+            stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)+stop_fr
+            print('customized french stopwords list loaded')
+        else:
+            stopwords_fr=list(spacy.lang.fr.stop_words.STOP_WORDS)
+            print('raw french stopwords list loaded')
+
+        if stop_en:
+            if type(stop_en)!=list:
+                raise ValueError("stop_en should be a list of strings")
+            stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)+stop_en
+            print('customized english stopwords list loaded')
+        else:
+            stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)
+            print('raw english stopwords list loaded')
+          
+        preprocessed = pd.DataFrame(texts).apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
+        
+        return preprocessed
+
     def plot_graph(self, start, stop, step, lang='fr'):
-   
+        '''
+        estimate optimal number of topics for lsa
+        '''
+
+       
         import matplotlib.pyplot as plt        
   
        

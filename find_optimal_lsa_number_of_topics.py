@@ -7,6 +7,9 @@ import spacy
 
 '''
 python script to compute LSA and printing topic related words
+
+Don't know why, but seems to work only in python script mode
+>>> python find_optimal_lsa_number_of_topics.py
 '''
 
 if __name__ == '__main__':
@@ -46,4 +49,4 @@ if __name__ == '__main__':
 	mdf2.plot_graph(start=2,stop=30,step=1)
 
 	#
-	# mdf2.create_gensim_lsa_model(number_of_topics=2, words=20, lang='fr')
+	# mdf2.create_gensim_lsa_model(number_of_topics=3, words=20, lang='fr')
