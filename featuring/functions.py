@@ -509,6 +509,7 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         
         self.ldamodel=ldamodel
         self.number_of_topics_lda=number_of_topics
+
         return ldamodel
     
     
@@ -540,6 +541,9 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb
         
         bug fixed: use itemgetter to find the max proba
+        
+        to do:
+            check if results are consistant with langage selection
         '''
         from operator import itemgetter
         import pandas as pd
@@ -548,8 +552,14 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
             all_topics = self.ldamodel.get_document_topics(self.doc_term_matrix, per_word_topics=True)
                
         else:
+            # NEED TO TEST FUNCTIONNALITY FOR HIDDEN BUGS
+            texts=pd.DataFrame({'num':range(0,len(texts)),'text':texts})
+            # print(texts)
             texts=self.nlp_preprocess_new_texts(texts)
-            doc_term_matrix = [self.dictionary.doc2bow(doc) for doc in texts]
+            # print(texts)
+            final_texts=[]
+            [final_texts.append(i.split()) for i in texts.lem_words.values]
+            doc_term_matrix = [self.dictionary.doc2bow(doc) for doc in final_texts]
             all_topics = self.ldamodel.get_document_topics(doc_term_matrix, per_word_topics=True)
 
         lda_cluster=[]    
@@ -590,8 +600,11 @@ class MergeDFAndComputeFeature(WebSiteListAnalyser, StringAnalyzer):
         else:
             stopwords_en=list(spacy.lang.en.stop_words.STOP_WORDS)
             print('raw english stopwords list loaded')
-          
-        preprocessed = pd.DataFrame(texts).apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
+        
+        # print(texts)
+        # print(texts.columns)
+        # print(texts.text)
+        preprocessed = texts.text.apply(lambda x: pd.Series(self.nlp_flow(x, nlp_en, nlp_fr, stopwords_en, stopwords_fr)))
         
         return preprocessed
 

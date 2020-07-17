@@ -226,7 +226,7 @@ print('\n------row: dbscan, col: kmeans------')
 print(pd.crosstab(ml.dfy_db, ml.dfy_kmeans))
 print('\n')
 
-#%%  lsa
+#%%  LSA & LDA
 
 import numpy as np
 import pandas as pd
@@ -247,8 +247,8 @@ if __name__ == '__main__':
     
     # REDUCE DIM OF DF FOR TESTING
     #------------------------------------------------
-    # dfjson=dfjson.iloc[0:1000,:]
-    # df=df.iloc[0:1000,:]
+    # dfjson=dfjson.iloc[0:100,:]
+    # df=df.iloc[0:100,:]
     #------------------------------------------------
     
     
@@ -274,10 +274,18 @@ if __name__ == '__main__':
     #%%
     mdf2.extract_words_by_lsa_topic( num_words=3)
 #%%
-    mdf2.create_gensim_lda_model(number_of_topics=5, words=20,lang='fr')
+    
+    
+    mdf2.create_gensim_lda_model(number_of_topics=3, words=20,lang='fr')
     #%%
     mdf2.extract_words_by_lda_topic(num_words=10)
     
     #%%
     mdf2.lda_predicted_cluster()
+    print(mdf2.lda_cluster)
+    
+    #%%
+    txt = ['Machine learning', 'aSsurance prévoyance']
+    print(pd.DataFrame(txt))
+    mdf2.lda_predicted_cluster(texts=txt)
     print(mdf2.lda_cluster)
